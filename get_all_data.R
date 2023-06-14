@@ -1,13 +1,17 @@
+require(tidyverse)
+require(GlobalFundr)
+require(readxl)
+
 # A. Preliminary steps and background information ####
    # a. ABOUT ####
 
 # creates a full wide format dataset with the most common calculated fields based on PIP and partner lives saved data (incidence and mortality rates)
 ## HIV incidence rates since Spring 2020 KPI reporting have used spectrum population
 
+## DEFINITIONS ##
 
-## definitions for certain fields   ##
 
-# 11 Feb 2020 - added spectrum based incidence rates for use for KPI 1 reporting and to transition to use in CPRS
+# 11 Feb 2020 - added spectrum based incidence rates for use for KPI 1 reporting and to transition to use in CPRs
 
 # dfw$hiv_mor_rate_100k_spec
 # dfw$hiv_mor_rate_100k_spec
@@ -19,7 +23,6 @@
 # population_3 = spectrum population in year t-1
 
 
-
 ###  GF lives saved from 2017 onwards
 
 # mal_deaths_averted_CF_WHO_2000
@@ -27,9 +30,6 @@
 # [OLD: deaths_averted_goals_aim_CF_2015_KPI 24 JAN 2020 hiv_deaths_averted_goals_aim_CF_2015_KPI
 
 # GF historic lives saved up to 2016 [used a financial share applied to results]
-
-
-## DEFINITIONS ##
 
 # Easy reference to GF historic lives saved to 2016, then KPI1 method from 2017 onwards
 # ls_gf_hiv
@@ -52,11 +52,7 @@
 
 # b. TO DO ####
 
-# add a switch to use live PIP or saved offline version of pip
 
-
-# display file name in console
-# rstudioapi::getActiveDocumentContext()$path
 
 
 # c. Switchboard- Load required packages and set up working directories ####
@@ -71,9 +67,11 @@ require(GlobalFundr)
 
 out <- "C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scripts_out//dfw//"
 in_ <- "C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scripts_in//"
-# setwd("C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scripts_working_dir//")  
+
 
 # d. Switchboard- Define parameters and load required source files (PIP,meta data, counterfactuals, UNAIDS data)   ####
+
+# set the latest data for partner epi data
 
 latest_hiv_year <- 2021
 latest_tb_year <- 2021
@@ -89,14 +87,13 @@ save_pip <- 0
 # set to 1 to write a copy of full disbursements for further analysis
 save_disbursements <- 1
 
-# set eligibilty year
+# set eligibility year
 eligibility_year <- 2021
-
 
 # set disbursements start year and end year [for results report for results report set a cut off date of end June of year of publication ]
 
 disb_year_start <- 2000
-disb_year_end <- 2021
+disb_year_end <- 2022
 
 
 # AIDS deaths and infections averted ##
@@ -175,10 +172,7 @@ raw_PIP_data <-
   GlobalFundr::extractPIP(indicators = pip_indicators_needed) %>% 
   rename_with(tolower) %>% 
   select(iso3codecountry,partnerindicatorvalueinternal,partnerindicatorvaluepublic,partnerindicatorvalueshortname,year) %>% 
-  rename(iso3=1,valueinternal=2,valuepublic=3,indicatoruniqueidentifier=4,year=5)
-
-
-
+  rename(iso3=1,value=2,valuepublic=3,indicatoruniqueidentifier=4,year=5)
 
 # # # # for definitive runs make a copy of PIP
 if(save_pip==1) {
@@ -186,68 +180,11 @@ if(save_pip==1) {
   print(paste0("A copy of PIP was written to",out,"raw_PIP_data",Sys.Date(),".csv"))
 }
 
-# e. supplement -  brief log of PIP duplication issues in the past ####
-
-# for pip mirror for 2022 resultsreport thre are stray decimals in the TB data
-# raw_PIP_data <-dplyr::na_if(raw_PIP_data, ".")
-
-# 13 OCt 2022
-# Population 3 is being systematically duplicated
-
-# raw_PIP_data <- raw_PIP_data %>% filter(indicatoruniqueidentifier!="Population3")
-
-# # # 9 Nov 2020 Population3 for BGR 2013 is duplicated. exclude using multiple OR conditions
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="BGR" | indicatoruniqueidentifier!="Population3" | indicatorlabel!="Total population, female (number) SPECTRUM")
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="LKA" | indicatoruniqueidentifier!="Population3" | indicatorlabel!="Total population, female (number) SPECTRUM")
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="UGA" | indicatoruniqueidentifier!="Population3" | indicatorlabel!="Total population, female (number) SPECTRUM")
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="AFG" | indicatoruniqueidentifier!="Population3" | indicatorlabel!="Total population, female (number) SPECTRUM")
-# 
-# # also exclude HIV454 which has many duplicates
-# raw_PIP_data <- raw_PIP_data %>% filter(indicatoruniqueidentifier!="HIV454")
-# raw_PIP_data <- raw_PIP_data %>% filter(indicatoruniqueidentifier!="HIV453")
-# #
-# # # # REMOVE OTHER SPECIFIC DUPLICATES
-# #
-# # 'MAC TB291 2004'
-# # MHL TB291 2000'
-# # RWA TB340 2016'
-# # 'WSM TB290 2016'
-#
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="MAC" | indicatoruniqueidentifier!="TB291" | year !=2004)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="MHL" | indicatoruniqueidentifier!="TB291" | year !=2000)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="RWA" | indicatoruniqueidentifier!="TB340" | year !=2016)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="WSM" | indicatoruniqueidentifier!="TB290" | year !=2016)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="TTO" | indicatoruniqueidentifier!="TB290" | year !=2017)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="UZB" | indicatoruniqueidentifier!="TB290" | year !=2012)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="IRL" | indicatoruniqueidentifier!="TB106" | year !=2015)
-# raw_PIP_data <- raw_PIP_data %>% filter(iso3!="HTI" | indicatoruniqueidentifier!="TB340" | year !=2018)
-# 
-# raw_PIP_data <- raw_PIP_data %>% filter(nchar(iso3)==3)
-
-# raw_PIP_data$indicatorlabel <- NULL
-# # #
+# 14 june 2023 HIV133 has duplicates in PIP so remove these using distinct until PIP is updated
+dfw <- raw_PIP_data %>% select(-(valuepublic)) %>% distinct()
+dfw_public <- raw_PIP_data %>% select(-(value))
 
 
-# # # for 2022 results report due to formating issues with PIP mirror remove malaria 28,29 and 30
-# # dfw<- dfw %>% 
-# #   filter(indicatoruniqueidentifier!="Malaria28" & 
-# #   indicatoruniqueidentifier!="Malaria29" & 
-# #   indicatoruniqueidentifier!="Malaria30")
-# 
-# # replace it with a second read in of the data
-# raw_PIP_data  <- read.csv(paste0(in_,"2022_02/PIP_mirror.csv"), stringsAsFactors = FALSE, na.strings = c("NA"))
-# 
-# 
-# raw_PIP_data  <- raw_PIP_data %>% filter(activityareaindicatorcode=="Malaria28" | 
-#                           activityareaindicatorcode=="Malaria29" | 
-#                           activityareaindicatorcode=="Malaria30")
-# 
-# raw_PIP_data <- raw_PIP_data %>% select(iso3,activityareaindicatorcode, year,percentage)
-# 
-# raw_PIP_data <- raw_PIP_data %>% rename(indicatoruniqueidentifier=activityareaindicatorcode) %>% 
-#   rename(value=percentage)
-
-dfw <- raw_PIP_data
 
 # f. Set the criteria for inclusion in results report cohort using lists file  ####
 lists<-
@@ -271,7 +208,7 @@ lists<-
   # since Russia is only eligible under the NGO rule, if necessary, remove Russia's eligibility for HIV for results reports purposes
   
   mutate(`GFalloc2022_HIV/AIDS`= ifelse(iso3=="RUS",0,`GFalloc2022_HIV/AIDS`)) %>% 
-  # create new columns for each disease if elibible in either 17-19 or 20-22 [current eligibility filter]
+  # create new columns for each disease if elibible in either 17-19 or 20-22 [current definition for results report cohort]
   mutate(`GFalloc1722_HIV/AIDS`=if_else((`GFalloc1719_HIV/AIDS`==1 |`GFalloc2022_HIV/AIDS`==1),1,0)) %>% 
   mutate(GFalloc1722_TB =if_else((GFalloc1719_TB==1 |GFalloc2022_TB==1),1,0)) %>% 
   mutate(GFalloc1722_Malaria= if_else((`GFalloc1719_Malaria`==1 | GFalloc2022_Malaria==1),1,0))  %>% 
@@ -284,11 +221,6 @@ lists<-
 
 
 
-# replace NAs with 0  GF supported and non-GF supported
-# lists[6:11][is.na(lists[6:11])] <- 0
-
-# for 2022 results report added a new column per disease to indicate if a disease component received funding for 
-# either 17-19 or 20-22
 
 
 # note that source file for countries receiving an allocation is C:/Users\rgrahn\OneDrive - The Global Fund\Documents\__SI\_R_scripts_in\2019_08\allocations_17_19_allocations_team.xlsx see Scratch.R for working
@@ -381,20 +313,18 @@ finish <- finish %>%
 
 # keep only columns defining the cohorts 
 finish <- finish %>% select(iso3,contains("coh"))
+
 # values checked against source 27 Nov 2020
 KPI1_cohort <- finish
 
 KPI1_cohort <- KPI1_cohort %>% mutate(iso3=ifelse(iso3=="KOS","QNA",iso3)) 
 
-save(KPI1_cohort,file="KPI1_cohort.R")
 # KPI1_coh %>% summarise_if(is.numeric,sum,na.rm=TRUE)
 # KPI1_coh %>% summarise(across(contains("coh"),sum,na.rm=TRUE))
 
-lists$GF_ST_2022_hivi <- NULL
-lists$GF_ST_2022_tbi <- NULL
-lists$GF_ST_2022_mali <- NULL
 
-lists <- full_join(lists,KPI1_cohort)
+
+lists <- full_join(lists%>% select(-(contains("GF_ST"))),KPI1_cohort)
 
 # B. Get malaria lives saved and cases averted from WHO [2000 cf]####
 
@@ -405,7 +335,7 @@ lists <- full_join(lists,KPI1_cohort)
 
 
 # other notes on file format etc 
-# WHO now provides both cases fections and deaths averted [2000 cf]
+# WHO now provides both cases infections and deaths averted [2000 cf]
 # note that the ls and ia prior to 2017 are NOT the historic lives saved (using attributive method up to and including 2016)
 # the 'raw' ls and ia have been used in results report for the graphs of incidence and mortality
 
@@ -428,7 +358,7 @@ dfw <-
 
 # C. Get TB lives saved estimates from WHO Global TB Program ####
 
-# file from P. Glaziou 15 October 2021 final lives saved numbers 
+# file from P. Glaziou 20 September 2022 final lives saved numbers 
 
 
 ls_tbneg <-
@@ -1156,14 +1086,16 @@ dfw  <- left_join(dfw_all,
 # select relevant indicators and place them in the correct order for the excel template
 dfw <- dfw %>% 
   select(iso3,contains("eligible"), contains("alloc1722"),
-         map_country,Population1,Population2,
-         # population_2,population_3,
-         contains("final"),`gf_region 10`,HIV1,id,year,
-         #  do not alter the order of any columns before year 
          contains("alloc2022"),contains("alloc1719"),
+         
+         # population_2,population_3,
+         contains("final"),year,map_country,`gf_region 10`,HIV1,
+         #  do not alter the order of any columns before year 
+         Population1,id,Population2,
          hiv_l_saved_coh_st, tb_l_saved_coh_st,mal_l_saved_st_coh,
          contains("disb"),contains("deaths"),contains("infections"), contains("rate"), contains("cases"), 
-         # HIV1,
+         HIV1,
+         
          HIV163, HIV121,HIV46,
          # HIV46_2,
          # hiv_neg_2,
@@ -1171,8 +1103,7 @@ dfw <- dfw %>%
          HIV10,HIV13, HIV130, HIV133, HIV124, # HIV218, not in pip
          # HIV219, not in pip
          HIV168, HIV163, # HIV222,not in pip
-         # HIV293,
-         # KPI8,
+               # KPI8,
          hiv_inc_rate_females_15_24,
          hiv_inc_rate_males_15_24,
          HIV19, # new infections males 15-24
@@ -1192,10 +1123,13 @@ dfw <- dfw %>%
          # HIV293,
          HIV440,HIV437,TB1,TB30,TB33,
          TB39,TB42,TB29,TB38,TB11,TB50,TB58,TB81,TB85,# TB14,# TB14	e_inc_rr_num is not published by WHO in 2021
-         TB77,TB90,TB190,TB97,TB202,TB249,TB269,                 TB285,
+         # TB77, e_tbhiv_prct	Estimated HIV in incident TB (percent) is not available in new PIP 14 June 2023
+         TB90,TB190,TB97,TB202,TB249,TB269,                 TB285,
          TB273,TB279,TB280, TB281,TB289,TB282,TB288,TB289,TB282,TB283,TB288,TB286,TB293,TB284,
          TB287,TB522,TB519,TB523,TB520,TB269,TB270, TB271, TB272, TB273,
-         TB316, TB317,TB82,TB83,TB84,TB339,
+         # TB316, mdr_cmplt	Outcomes for MDR-TB cases: treatment completed is not available in new PIP 14 June 2023
+         # TB317, mdr_cur	Outcomes for MDR-TB cases: cured
+         TB82,TB83,TB84,TB339,
          Malaria1,Malaria7,Malaria28, Malaria29,Malaria30,Malaria32,# Malaria36,
          Malaria41,Malaria186,Malaria189,Malaria186_no,Malaria189_no,Malaria192,# Malaria32,
          Malaria41,Malaria39,Malaria45,# GF_ST_2022_hivi,GF_ST_2022_tbi,GF_ST_2022_mali,
@@ -1207,11 +1141,6 @@ ifelse(colnames(dfw)[18]=="year","year is OK","year is not in correct column")
 # colnames(dfw)[23]
 ifelse(colnames(dfw)[23]=="id","id is OK","id is not in correct column")
 
-# 
-# ifelse(colnames(dfw)[6]=="GFalloc1719_HIV/AIDS","GFalloc1719_HIV/AIDS is OK","GFalloc1719_HIV/AIDS is not in correct column")
-# ifelse(colnames(dfw)[7]=="GFalloc1719_TB","GFalloc1719_TB is OK","GFalloc1719_TB is not in correct column")
-# ifelse(colnames(dfw)[8]=="GFalloc1719_Malaria","GFalloc1719_Malaria is OK","GFalloc1719_Malaria is not in correct column")
-# 
 
 #  hardcode the values used for India tb treatment success rate 
 
@@ -1220,30 +1149,29 @@ ifelse(colnames(dfw)[23]=="id","id is OK","id is not in correct column")
 
 # NOTE THAT THESE ADJUSTMENTS ARE NOT MADE TO THE DFW ALL FILE
 
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2019, 1708666,TB285))
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2018,1566623,TB285))
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2017,1381793,TB285))
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2016,1446967,TB285))
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2015,1410263,TB285))
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2014,1267532,TB285))
-
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2019, 1415096,TB289))
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2018,1323298,TB289))
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2017,1122223,TB289))
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2016,1145065,TB289))
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2015,1230938,TB289))
-dfw <- dfw %>% mutate(TB289=ifelse(iso3=="IND"&year==2014,1124503,TB289))
-
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2019,82.8171802,TB249))
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2018,84.4681841,TB249))
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2017,81.2149866,TB249))
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2016,79.1355297,TB249))
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2015,87.284308,TB249))
-dfw <- dfw %>% mutate(TB249=ifelse(iso3=="IND"&year==2014,88.7159796,TB249))
+dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2019, 1708666,TB285)) %>%
+  mutate(TB285=ifelse(iso3=="IND"&year==2018,1566623,TB285)) %>%
+  mutate(TB285=ifelse(iso3=="IND"&year==2017,1381793,TB285)) %>%
+  mutate(TB285=ifelse(iso3=="IND"&year==2016,1446967,TB285)) %>%
+  mutate(TB285=ifelse(iso3=="IND"&year==2015,1410263,TB285)) %>%
+  mutate(TB285=ifelse(iso3=="IND"&year==2014,1267532,TB285)) %>%
+  mutate(TB289=ifelse(iso3=="IND"&year==2019, 1415096,TB289)) %>%
+  mutate(TB289=ifelse(iso3=="IND"&year==2018,1323298,TB289)) %>%
+  mutate(TB289=ifelse(iso3=="IND"&year==2017,1122223,TB289)) %>%
+  mutate(TB289=ifelse(iso3=="IND"&year==2016,1145065,TB289)) %>% 
+  mutate(TB289=ifelse(iso3=="IND"&year==2015,1230938,TB289)) %>%
+  mutate(TB289=ifelse(iso3=="IND"&year==2014,1124503,TB289)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2019,82.8171802,TB249)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2018,84.4681841,TB249)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2017,81.2149866,TB249)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2016,79.1355297,TB249)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2015,87.284308,TB249)) %>%
+  mutate(TB249=ifelse(iso3=="IND"&year==2014,88.7159796,TB249))
 
 # also add in list of countries to feature in top 10 individual country charts and filter to eligible ever
 
 #TB
+
 dfw <- full_join(dfw,
                  read_excel(rr_top_10s_location) %>% 
                    select(TB_10_list) %>%
@@ -1279,14 +1207,14 @@ write.csv(dfw,file=paste0(out,"dfw_rr_inds",Sys.Date(),".csv"),na = "", row.name
 # hiv_neg_2,
 # hiv_inc_rate_100k,hiv_mor_rate_100k,tb_inc_rate_100k,tb_mor_rate_100k,mal_inc_rate_1k,mal_mor_rate_100k),file=paste0(out,"dfw_qa_",Sys.Date(),".csv"),na = "")
 # 4. Write load file for Country Results Profile and SSD counterfactuals ####
-# # 
-write.csv(dfw_all %>%
-            filter(eligible_ever==1) %>%  
-            select(iso3,year,
-                   infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
-                   tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
-                   mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
-            filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
+# # # 
+# write.csv(dfw_all %>%
+#             filter(eligible_ever==1) %>%  
+#             select(iso3,year,
+#                    infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
+#                    tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
+#                    mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
+#             filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
 
 
 ##### for results report 2021 produce a file for interactive chart with infections / deaths averted according to results report methodology as well as actuals
