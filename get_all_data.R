@@ -132,7 +132,7 @@ file.exists(ls_to2016_location)
 tb_hiv_breakdown_location <- paste0(in_, "2022_02/HIV-TB - Disbursement Breakdown 2022.xlsx")
 
 # read in list of indicators to obtain from PIP
-pip_indicators_needed <- readLines("~/__SI/_R_scripts_in/2022_03/pip_indicators_needed.csv", encoding ="UTF-8-BOM")[-1] # drop column name deliberately
+pip_indicators_needed <- readLines("~/__SI/_R_scripts_in/2023_01/pip_indicators_needed.csv", encoding ="UTF-8-BOM")[-1] # drop column name deliberately
 
 lists_location <-paste0(in_,"2022_01//Lists_2022_01.xlsx") # file with disbursement amounts per country, use as results report cohort filter
 
@@ -947,6 +947,9 @@ dfw <-
   mutate(tb_inc_rate_100k = (TB11/ Population1)*10^5) %>% 
   # calculate the country mortality rate TB (excl. HIV+)
   mutate(tb_mor_rate_100k = (TB58/ Population1)*10^5) %>% 
+  mutate(tb_inc_rate_100k_who = (TB11/ TB67)*10^5) %>% 
+  # calculate the country mortality rate TB (excl. HIV+)
+  mutate(tb_mor_rate_100k_who = (TB58/ TB67)*10^5) %>% 
   
   # calculate the malaria country incidence rate per country and year
   mutate(mal_inc_rate_1k=(Malaria1/ (Malaria32)*10^3)) %>% 
@@ -955,11 +958,11 @@ dfw <-
   # calculate HIV AGYW incidence rates (UNAIDS data) 
   mutate(hiv_inc_rate_females_15_24= HIV22/(lag(Population9,1)- lag(HIV67,1))  *10^5) %>% # females
   mutate(hiv_inc_rate_males_15_24=HIV19/(lag(Population10,1)- lag(HIV64,1))*10^5) %>%  # males
-  # Calculate TB infections averted CF 2000 (not provided by WHO)#
+  # Calculate TB infections averted CF 2000 (not provided by WHO) but using WHO population#
   group_by(iso3) %>% 
-  mutate(helper=ifelse(year==2000,tb_inc_rate_100k,NA)) %>% 
+  mutate(helper=ifelse(year==2000,tb_inc_rate_100k_who,NA)) %>% 
   fill(helper, .direction="updown") %>%  
-  mutate(tb_cases_averted_CF_2000_not_WHO=(Population1/10^5* helper)-TB11) %>%
+  mutate(tb_cases_averted_CF_2000_not_WHO=(TB67/10^5* helper)-TB11) %>%
   select(-(helper)) %>% 
   ungroup() %>% 
   # Add specific indicators needed for RR
@@ -974,27 +977,7 @@ dfw <-
   mutate(mdr_tx_cov_det=TB85/TB84) %>% 
   pivot_longer(values_to = "value", names_to = "indicatoruniqueidentifier",3:last_col())      
 
-# for checks
-# select(iso3,year,contains("rate"), HIV1, HIV46, Population1, Population2)
-# filter(iso3=="KEN") 
 
-
-
-# Not to be used for KPI reporting
-# calculate the TB incidence rate (no program) which is not provided by WHO
-# infections averted by TB programs
-# # using grouped calculation in separate df
-# tb_cf <- dfw %>% select(iso3,year,TB11,Population1,tb_inc_rate_100k)
-# tb_cf <- tb_cf[complete.cases(tb_cf),]
-
-# CF is number of cases if 2000 rate had persisted minus actual TB cases
-
-# tb_cf <- tb_cf %>%
-#   arrange(iso3, year) %>% 
-#   group_by(iso3) %>% 
-#   mutate(tb_inc_rate_100k_2000 = ifelse(year == 2000, tb_inc_rate_100k, NA)) %>% 
-#   fill(tb_inc_rate_100k_2000) %>% 
-#   mutate(tb_cases_averted_CF_2000_not_WHO=(Population1/10^5* tb_inc_rate_100k_2000)-TB11) %>% ungroup()
 # 
 
 #### K. Add specific indicators needed for RR
@@ -1129,7 +1112,7 @@ dfw <- dfw %>%
          TB287,TB522,TB519,TB523,TB520,TB269,TB270, TB271, TB272, TB273,
          # TB316, mdr_cmplt	Outcomes for MDR-TB cases: treatment completed is not available in new PIP 14 June 2023
          # TB317, mdr_cur	Outcomes for MDR-TB cases: cured
-         TB82,TB83,TB84,TB339,
+         TB82,TB83,TB84,TB339,TB67,
          Malaria1,Malaria7,Malaria28, Malaria29,Malaria30,Malaria32,# Malaria36,
          Malaria41,Malaria186,Malaria189,Malaria186_no,Malaria189_no,Malaria192,# Malaria32,
          Malaria41,Malaria39,Malaria45,# GF_ST_2022_hivi,GF_ST_2022_tbi,GF_ST_2022_mali,
@@ -1142,7 +1125,7 @@ ifelse(colnames(dfw)[18]=="year","year is OK","year is not in correct column")
 ifelse(colnames(dfw)[23]=="id","id is OK","id is not in correct column")
 
 
-#  hardcode the values used for India tb treatment success rate 
+#  hardcode the values used for India tb treatment success rate for the results report file ony #####
 
 # Note: cells highlighted yellow for TB India treatment success have been adjusted based on country-published data to replace WHO TB program data which is suspected to include some private sector cases
 # the adjustment needs to be made after reviewing the data each year
