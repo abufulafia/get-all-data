@@ -1130,26 +1130,28 @@ ifelse(colnames(dfw)[23]=="id","id is OK","id is not in correct column")
 # Note: cells highlighted yellow for TB India treatment success have been adjusted based on country-published data to replace WHO TB program data which is suspected to include some private sector cases
 # the adjustment needs to be made after reviewing the data each year
 
+
+# 29 June 2023 hardcoding for india stopped as no longer necessary
 # NOTE THAT THESE ADJUSTMENTS ARE NOT MADE TO THE DFW ALL FILE
 
-dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2019, 1708666,TB285)) %>%
-  mutate(TB285=ifelse(iso3=="IND"&year==2018,1566623,TB285)) %>%
-  mutate(TB285=ifelse(iso3=="IND"&year==2017,1381793,TB285)) %>%
-  mutate(TB285=ifelse(iso3=="IND"&year==2016,1446967,TB285)) %>%
-  mutate(TB285=ifelse(iso3=="IND"&year==2015,1410263,TB285)) %>%
-  mutate(TB285=ifelse(iso3=="IND"&year==2014,1267532,TB285)) %>%
-  mutate(TB289=ifelse(iso3=="IND"&year==2019, 1415096,TB289)) %>%
-  mutate(TB289=ifelse(iso3=="IND"&year==2018,1323298,TB289)) %>%
-  mutate(TB289=ifelse(iso3=="IND"&year==2017,1122223,TB289)) %>%
-  mutate(TB289=ifelse(iso3=="IND"&year==2016,1145065,TB289)) %>% 
-  mutate(TB289=ifelse(iso3=="IND"&year==2015,1230938,TB289)) %>%
-  mutate(TB289=ifelse(iso3=="IND"&year==2014,1124503,TB289)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2019,82.8171802,TB249)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2018,84.4681841,TB249)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2017,81.2149866,TB249)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2016,79.1355297,TB249)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2015,87.284308,TB249)) %>%
-  mutate(TB249=ifelse(iso3=="IND"&year==2014,88.7159796,TB249))
+# dfw <- dfw %>% mutate(TB285=ifelse(iso3=="IND"&year==2019, 1708666,TB285)) %>%
+#   mutate(TB285=ifelse(iso3=="IND"&year==2018,1566623,TB285)) %>%
+#   mutate(TB285=ifelse(iso3=="IND"&year==2017,1381793,TB285)) %>%
+#   mutate(TB285=ifelse(iso3=="IND"&year==2016,1446967,TB285)) %>%
+#   mutate(TB285=ifelse(iso3=="IND"&year==2015,1410263,TB285)) %>%
+#   mutate(TB285=ifelse(iso3=="IND"&year==2014,1267532,TB285)) %>%
+#   mutate(TB289=ifelse(iso3=="IND"&year==2019, 1415096,TB289)) %>%
+#   mutate(TB289=ifelse(iso3=="IND"&year==2018,1323298,TB289)) %>%
+#   mutate(TB289=ifelse(iso3=="IND"&year==2017,1122223,TB289)) %>%
+#   mutate(TB289=ifelse(iso3=="IND"&year==2016,1145065,TB289)) %>% 
+#   mutate(TB289=ifelse(iso3=="IND"&year==2015,1230938,TB289)) %>%
+#   mutate(TB289=ifelse(iso3=="IND"&year==2014,1124503,TB289)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2019,82.8171802,TB249)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2018,84.4681841,TB249)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2017,81.2149866,TB249)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2016,79.1355297,TB249)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2015,87.284308,TB249)) %>%
+#   mutate(TB249=ifelse(iso3=="IND"&year==2014,88.7159796,TB249))
 
 # also add in list of countries to feature in top 10 individual country charts and filter to eligible ever
 
