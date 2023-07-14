@@ -181,9 +181,8 @@ if(save_pip==1) {
 }
 
 # 14 june 2023 HIV133 has duplicates in PIP so remove these using distinct until PIP is updated
-dfw <- raw_PIP_data %>% select(-(valuepublic)) %>% distinct()
-dfw_public <- raw_PIP_data %>% select(-(value))
-
+dfw <-
+  raw_PIP_data %>% select(-(valuepublic)) %>% mutate(id=paste0(iso3,indicatoruniqueidentifier,year)) %>% distinct(id, .keep_all=TRUE) %>% select(-(id))
 
 
 # f. Set the criteria for inclusion in results report cohort using lists file  ####
@@ -364,7 +363,7 @@ dfw <-
 ls_tbneg <-
   read.csv(tb_ls_location, stringsAsFactors = FALSE) %>% 
   select(1:3) %>% # keep relevant columns (drop lives saved including hiv +)
-  filter(year!="Cumulative") %>% # remove 'cumulatives rows'
+  filter(year!="Cumulative") %>% # remove 'cumulative rows'
   na.omit() %>% 
   # mutate(year=as.character(year)) %>% 
   mutate(year=as.numeric(year)) %>% 
@@ -749,15 +748,15 @@ if(save_disbursements==1) {
 
 #  
 # apply filters defined in switchboard for rr disbursements analysis
-GrantAgreementDisbursements1 <- disb %>%
-  filter(disbursementYear>=disb_year_start
-         &disbursementYear<=disb_year_end-1)
-
-# add the first six months of the current year
 disb <- disb %>%
-  filter(disbursementYear==disb_year_end&disbursementMonth<=6)
-# #
-disb <- rbind(disb,GrantAgreementDisbursements1)
+  filter(disbursementYear>=disb_year_start
+         &disbursementYear<=disb_year_end)
+
+# # add the first six months of the current year
+# disb <- disb %>%
+#   filter(disbursementYear==disb_year_end&disbursementMonth<=6)
+# # #
+# disb <- rbind(disb,GrantAgreementDisbursements1)
 # 
 disb <- disb %>%
   group_by(geographicAreaCode_ISO3,componentName,disbursementYear) %>%
@@ -777,7 +776,7 @@ disb %>% summarise_at(vars(value),list(~sum(.)))
 # #
 disb %>% group_by(indicatoruniqueidentifier) %>%
   summarise_at(vars(value),list(~sum(.))) %>% ungroup()
-# # # validated vs finance input file 25 July 2022
+# # # validated vs finance input file 14 July 2023
 # 
 # # correct QUA for QMJ multi country western pacific (uses QMJ in Ryan's file)
 # disb %>% filter(iso3=="QUA")
@@ -799,7 +798,9 @@ disb[disb == "Multicomponent"]   <-"disb_rssh_raw"
 disb[disb == "TB/HIV"]   <-"disb_tb_hiv_raw"
 # #
 # # # # make a df of unadjusted disbursements summed by year
-disb <- disb %>% group_by(iso3,indicatoruniqueidentifier,year) %>%
+disb <- 
+  disb %>% 
+  group_by(iso3,indicatoruniqueidentifier,year) %>%
   summarise_at(c("value"),sum,na.rm=TRUE) %>% 
   ungroup() %>%  
   spread(key = indicatoruniqueidentifier,value=value)
@@ -809,46 +810,39 @@ disb [is.na(disb)] <-0
 # 
 disb %>%  summarise_if(vars(is.numeric(.)),list(~sum(.)))
 # # disbursement breadkdown of TB/HIV grants 
-# # read in file prepared by Ryan Narciso team on 18 Sept 2021
+# # read in file prepared by Ryan Narciso team on 10 July 2023
 # #
-tb_hiv_breakdown <- read_excel(tb_hiv_breakdown_location,
-                               sheet = "HIV-TB - Module-Specific %", range = "A7:C60", col_names = FALSE) %>%
+tb_hiv_breakdown <-
+  read_excel(tb_hiv_breakdown_location,
+                               sheet = "HIV-TB - Module-Specific %", range = "A7:C67", col_names = FALSE) %>%
   rename("country"=1, "HIV_specific"=2,"TB_specific"=3)
 # #
 # #
-# also read in those countries where an [78/22]80 / 20 split is assumed
-tb_hiv_breakdown2 <- read_excel(tb_hiv_breakdown_location,
-                                sheet = "HIV-TB - Module-Specific %", range = "A64:C83", col_names = FALSE)%>%
+# also read in those countries where an 78/22 split is assumed
+tb_hiv_breakdown2 <- 
+  read_excel(tb_hiv_breakdown_location,
+                                sheet = "HIV-TB - Module-Specific %", range = "A75:C80", col_names = FALSE)%>%
   rename("country"=1, "HIV_specific"=2,"TB_specific"=3)
-# 
-# # remove duplicates in RYan's tbhiv file
-# 
-tb_hiv_breakdown2 <-  tb_hiv_breakdown2 %>% filter(country!="Azerbaijan"&
-                                                     country!="Cameroon"
-                                                   &country!="C?te d'Ivoire"
-                                                   &country!= "Mali"
-                                                   &country!="Mongolia"
-                                                   &country!="Morocco"
-                                                   &country!="Solomon Islands"
-                                                   &country!="South Sudan"
-                                                   &country!= "Tajikistan")
-# 
-# tb_hiv_breakdown <- rbind(tb_hiv_breakdown,tb_hiv_breakdown2)
+
+ 
+tb_hiv_breakdown <- rbind(tb_hiv_breakdown,tb_hiv_breakdown2)
 # # no duplicates at this point
 # # # use the old spelling of Cabo Verde to match with lists
+
+
 tb_hiv_breakdown[tb_hiv_breakdown =="Cabo Verde"] <- "Cape Verde"
+
 # #
 tb_hiv_breakdown <- left_join(tb_hiv_breakdown,lists %>% select(iso3,country))
 # 
 # # add the iso3 codes used for regional grants
-tb_hiv_breakdown <-  left_join(tb_hiv_breakdown,multi_country_table,
+tb_hiv_breakdown <-  left_join(tb_hiv_breakdown,multi_country_table %>% 
+                                 select(geographicareacode_iso3,multicountryname),
                                by= c("country"="multicountryname")) %>%
   mutate(iso3=ifelse(is.na(iso3),geographicareacode_iso3,iso3)) %>%
   select(-(geographicareacode_iso3))
 # 
-# 
-# tb_hiv_breakdown$country <- NULL
-# #
+
 disb <- full_join(disb,tb_hiv_breakdown)
 #
 disb <- disb %>% filter(!is.na(iso3))
@@ -856,11 +850,14 @@ disb <- disb %>% filter(!is.na(iso3))
 # disb[is.na(disb)] <-0
 
 disb %>%  summarise_if(vars(is.numeric(.)),list(~sum(.,na.rm = TRUE)))
+# matches 10 JUly 2023 finance file
+
 # #### Add proportion indicated of TB/HIV to TB and HIV
-# no duplicates to here
+
 
 # # to hiv first
-disb <- disb %>% group_by(iso3,year)%>%
+disb <- 
+  disb %>% group_by(iso3,year)%>%
   mutate(disb_hiv_tot=disb_hiv_raw + (disb_tb_hiv_raw*HIV_specific)) %>%
   
   #then to tb
