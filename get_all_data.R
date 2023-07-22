@@ -747,17 +747,11 @@ if(save_disbursements==1) {
 }
 
 #  
-# apply filters defined in switchboard for rr disbursements analysis
+# apply filters defined in switchboard for RR disbursements analysis
 disb <- disb %>%
   filter(disbursementYear>=disb_year_start
          &disbursementYear<=disb_year_end)
 
-# # add the first six months of the current year
-# disb <- disb %>%
-#   filter(disbursementYear==disb_year_end&disbursementMonth<=6)
-# # #
-# disb <- rbind(disb,GrantAgreementDisbursements1)
-# 
 disb <- disb %>%
   group_by(geographicAreaCode_ISO3,componentName,disbursementYear) %>%
   summarise_at(c("disbursementAmount"),sum,na.rm=TRUE) %>% ungroup()
@@ -836,14 +830,17 @@ tb_hiv_breakdown[tb_hiv_breakdown =="Cabo Verde"] <- "Cape Verde"
 tb_hiv_breakdown <- left_join(tb_hiv_breakdown,lists %>% select(iso3,country))
 # 
 # # add the iso3 codes used for regional grants
-tb_hiv_breakdown <-  left_join(tb_hiv_breakdown,multi_country_table %>% 
-                                 select(geographicareacode_iso3,multicountryname),
-                               by= c("country"="multicountryname")) %>%
+tb_hiv_breakdown <-  
+  left_join(tb_hiv_breakdown,
+  multi_country_table %>% 
+  select(geographicareacode_iso3,multicountryname),
+  by= c("country"="multicountryname")) %>%
   mutate(iso3=ifelse(is.na(iso3),geographicareacode_iso3,iso3)) %>%
   select(-(geographicareacode_iso3))
 # 
 
-disb <- full_join(disb,tb_hiv_breakdown)
+disb <-
+  left_join(disb,tb_hiv_breakdown)
 #
 disb <- disb %>% filter(!is.na(iso3))
 
@@ -856,19 +853,24 @@ disb %>%  summarise_if(vars(is.numeric(.)),list(~sum(.,na.rm = TRUE)))
 
 
 # # to hiv first
-disb <- 
+disb <-
   disb %>% group_by(iso3,year)%>%
-  mutate(disb_hiv_tot=disb_hiv_raw + (disb_tb_hiv_raw*HIV_specific)) %>%
+  mutate(disb_hiv_tot=
+           ifelse(is.na(HIV_specific), disb_hiv_raw, 
+           disb_hiv_raw + (disb_tb_hiv_raw*HIV_specific))) %>%
   
   #then to tb
-  mutate(disb_tb_tot=disb_tb_raw + (disb_tb_hiv_raw*TB_specific)) %>%
+  mutate(disb_tb_tot=
+           ifelse(is.na(TB_specific), disb_tb_raw, 
+           disb_tb_raw + (disb_tb_hiv_raw*TB_specific))) %>%
   
   # mal is unchanged
   mutate(disb_mal_tot=disb_mal_raw) %>%
   ungroup()
 
 # add cumulative disbursements column for raw disbursements
-disb <- disb %>% group_by(iso3) %>% mutate(disb_hiv_raw_cum =cumsum(disb_hiv_raw)) %>%
+disb <- disb %>% group_by(iso3) %>% 
+  mutate(disb_hiv_raw_cum =cumsum(disb_hiv_raw)) %>%
   mutate(disb_tb_raw_cum =cumsum(disb_tb_raw)) %>%
   mutate(disb_tb_hiv_raw_cum  =cumsum(disb_tb_hiv_raw)) %>%
   mutate(disb_mal_raw_cum  =cumsum(disb_mal_raw))%>%
@@ -883,7 +885,7 @@ disb <- disb %>% group_by(iso3) %>% mutate(disb_hiv_raw_cum =cumsum(disb_hiv_raw
 
 # 
 # # # write just disbursements for checks if needed
-#  # write.csv(disb ,file= paste0(out,"disb_w tbhiv",Sys.Date(),".csv"))
+ write.csv(disb ,file= paste0(out,"disb_w tbhiv",Sys.Date(),".csv"))
 # #
 # # # gather and combine with main dataframe
 disb <- 
@@ -914,19 +916,18 @@ disb %>% filter(!grepl("cum",indicatoruniqueidentifier))%>%
 disb %>% filter(!grepl("cum",indicatoruniqueidentifier))%>%
   filter(grepl("tot",indicatoruniqueidentifier) | grepl("disb_rssh_raw",indicatoruniqueidentifier)) %>%
   summarise_at(vars(value),list(~sum(.,na.rm = TRUE)))
-# fully validated 28 july 2022
-# 
-# # rbind it to pip data
-# 
-# # 12 DECEMBER 2022M ,TEMPORARILY BLOCK DISB SECTION FROM JOINING AS MURAD HAS UPDATED DATA SERVICE ON WEBSITE (TAKE CODE FROM xx)
-dfw <- full_join(dfw,disb)
-# 
 
-# 
+# validated vs THi Ly file
+
+# # rbind it to pip data
+
+dfw <- full_join(dfw,disb)
+ 
+
 # # use row names to check for duplicates
 row.names(dfw)<-(paste(dfw$iso3,dfw$indicatoruniqueidentifier,dfw$year))
 row.names(dfw) <- NULL
-# # 
+ 
 
 # H. Carry out specific calculations within PIP data for incidence rates, inc rates among AGYW and AMYB, also TB cases counterfactuals ####
 
