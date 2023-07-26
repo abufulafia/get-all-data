@@ -73,7 +73,7 @@ in_ <- "C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scrip
 
 # set the latest data for partner epi data
 
-latest_hiv_year <- 2021
+latest_hiv_year <- 2022
 latest_tb_year <- 2021
 latest_mal_year <- 2021
 
@@ -162,17 +162,24 @@ file.exists(rr_top_10s_location)
 
 # to do switch to use either live pip or an offline processed copy. for now unhash section below to use offline version 
 # contains 2021 values for HIV, and 2020 for TB and malaria epi data
-# raw_PIP_data  <- read.csv(paste0(in_,"2022_02/PIP_mirror.csv"), stringsAsFactors = FALSE, na.strings = c("NA"))
+raw_PIP_data  <- read.csv(paste0(in_,"2023_01/PIP_mirror.csv"), stringsAsFactors = FALSE, na.strings = c("NA"))
 # for pip mirror for 2022 results report there are stray decimal points in the numerator and denominator columns
 # raw_PIP_data <-dplyr::na_if(raw_PIP_data, ".")
 
 # unhash here to extract PIP using GlobalFundr
-# 
-raw_PIP_data <- 
-  GlobalFundr::extractPIP(indicators = pip_indicators_needed) %>% 
-  rename_with(tolower) %>% 
-  select(iso3codecountry,partnerindicatorvalueinternal,partnerindicatorvaluepublic,partnerindicatorvalueshortname,year) %>% 
-  rename(iso3=1,value=2,valuepublic=3,indicatoruniqueidentifier=4,year=5)
+# # 
+# raw_PIP_data <- 
+#   GlobalFundr::extractPIP(indicators = pip_indicators_needed) %>% 
+#   rename_with(tolower) %>% 
+#   select(iso3codecountry,partnerindicatorvalueinternal,partnerindicatorvaluepublic,partnerindicatorvalueshortname,year) %>% 
+#   rename(iso3=1,value=2,valuepublic=3,indicatoruniqueidentifier=4,year=5)
+
+names(raw_PIP_data) <-  gsub("\\.", "", names(raw_PIP_data))
+raw_PIP_data <-
+  raw_PIP_data %>% 
+      select(ISOCountryCode,ValueInternal,ValuePublic,ActivityAreaIndicatorCode,Year) %>%
+    rename(iso3=1,value=2,valuepublic=3,indicatoruniqueidentifier=4,year=5)
+  
 
 # # # # for definitive runs make a copy of PIP
 if(save_pip==1) {
@@ -180,10 +187,14 @@ if(save_pip==1) {
   print(paste0("A copy of PIP was written to",out,"raw_PIP_data",Sys.Date(),".csv"))
 }
 
-# 14 june 2023 HIV133 has duplicates in PIP so remove these using distinct until PIP is updated
-dfw <-
-  raw_PIP_data %>% select(-(valuepublic)) %>% mutate(id=paste0(iso3,indicatoruniqueidentifier,year)) %>% distinct(id, .keep_all=TRUE) %>% select(-(id))
 
+# raw_PIP_data[duplicated(raw_PIP_data)]
+
+# 26 July 2023 HIV133 has duplicates in PIP so remove these using distinct until PIP is updated
+dfw <-
+  raw_PIP_data %>% 
+  filter(indicatoruniqueidentifier!="HIV603" & indicatoruniqueidentifier!="HIV133"& indicatoruniqueidentifier!="Population5"  ) %>% 
+  select(-(valuepublic))  
 
 # f. Set the criteria for inclusion in results report cohort using lists file  ####
 lists<-
