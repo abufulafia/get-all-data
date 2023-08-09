@@ -134,7 +134,7 @@ tb_hiv_breakdown_location <- paste0(in_, "2023_01/HIV-TB - Disbursement Breakdow
 # read in list of indicators to obtain from PIP
 pip_indicators_needed <- readLines("~/__SI/_R_scripts_in/2023_01/pip_indicators_needed.csv", encoding ="UTF-8-BOM")[-1] # drop column name deliberately
 
-lists_location <-paste0(in_,"2022_01//Lists_2022_01.xlsx") # file with disbursement amounts per country, use as results report cohort filter
+lists_location <-paste0(in_,"2022_01//Lists_2023_01.xlsx") # file with disbursement amounts per country, use as results report cohort filter
 
 modelled_kpi_loc_cycle_17_22 <- "~//__SI//_R_scripts_in//2018_11//Copy of allModelledKPIs_3Mar2017.xlsx"
 file.exists(modelled_kpi_loc_cycle_17_22)
