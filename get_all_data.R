@@ -98,23 +98,31 @@ disb_year_end <- 2022
 
 # AIDS deaths and infections averted ##
 
-# goals_deaths_averted_2015_location <- paste0(in_,"2022_02//Counterfactual 77 countries no ART since 2017 constant behavior from 2015 2aug2022.xlsx")
-# updated version from John Stover 28 Aug 2022
-goals_deaths_averted_2015_location <- paste0(in_,"2022_02//Counterfactual 77 countries no ART since 2017 constant behavior from 2015 repilcate 2021 28aug2022.xlsx")
+# no ART since 2017 constant behavior from 2015
+#  from John Stover 28 July 2023
+# using 'with dropoff' version
+goals_deaths_averted_2015_location <- paste0(in_,"2023_01//cf//Counterfactual 72 countries no ART since 2017 constant behavior from 2015_28jul2023_with Goals dropout sync.xlsx")
 file.exists(goals_deaths_averted_2015_location)
 
-# updated version from John Stover 11 Aug 2022
-# goals_inf_deaths_averted_2000_location <- paste0(in_,"2022_02//Counterfactual 77 countries no ART no BC after 2000.xlsx")
-goals_inf_deaths_averted_2000_location <- paste0(in_,"2022_02//Counterfactual 77 countries no ART no BC after 2000 10aug2022.xlsx")
+# version from Yu Teng 10 Aug 2022
+# goals_inf_deaths_averted_2000 file 
+
+goals_inf_deaths_averted_2000_location <- paste0(in_,"2023_01//Counterfactual 77 countries no ART no BC after 2000 28jul23_2022 added.xlsx")
 file.exists(goals_inf_deaths_averted_2000_location)
 
-AIM_deaths_averted_location <- paste0(in_,"2022_02//HIV2022Estimates_GF_20July2022.xlsx")
+AIM_deaths_averted_location <- paste0(in_,"2023_01//HIV2023Estimates_GF_17July2023.xlsx")
+file.exists(AIM_deaths_averted_location)
 
-AEM_inf_deaths_averted_2000_location <- paste0(in_,"2022_02//TBrown_batch_2vf/Historical impact of HIV programs from AEMs for 2022_Updated.xlsx")
 
-AEM_inf_deaths_averted_2015_location <- paste0(in_,"2022_02//TBrown_batch_2vf/Strategy impacts from AEMs for 2022.xlsx")
+AEM_inf_deaths_averted_2000_location <- paste0(in_,"2023_01//Historical impact of HIV programs from AEM 2023.xlsx")
+file.exists(AEM_inf_deaths_averted_2000_location)
 
-UNAIDS_estimates_location <- paste0(in_,"2022_02//HIV2022Estimates_GF_20July2022.xlsx")
+AEM_inf_deaths_averted_2015_location <- paste0(in_,"2023_01/Strategy impacts from AEM 2023.xlsx")
+file.exists(AEM_inf_deaths_averted_2015_location)
+
+UNAIDS_estimates_location <- paste0(in_,"2023_01//HIV2023Estimates_GF_17July2023.xlsx")
+file.exists(UNAIDS_estimates_location)
+
 
 # WHO TB department lives saved  ##
 tb_ls_location <- paste0(in_, "2022_03/lsaved_2022-09-20.csv") # lives saved estimate from WHO TB department
@@ -134,7 +142,7 @@ tb_hiv_breakdown_location <- paste0(in_, "2023_01/HIV-TB - Disbursement Breakdow
 # read in list of indicators to obtain from PIP
 pip_indicators_needed <- readLines("~/__SI/_R_scripts_in/2023_01/pip_indicators_needed.csv", encoding ="UTF-8-BOM")[-1] # drop column name deliberately
 
-lists_location <-paste0(in_,"2022_01//Lists_2023_01.xlsx") # file with disbursement amounts per country, use as results report cohort filter
+lists_location <-paste0(in_,"2023_01//Lists_2023_01.xlsx") # file with disbursement amounts per country, use as results report cohort filter
 
 modelled_kpi_loc_cycle_17_22 <- "~//__SI//_R_scripts_in//2018_11//Copy of allModelledKPIs_3Mar2017.xlsx"
 file.exists(modelled_kpi_loc_cycle_17_22)
@@ -385,22 +393,24 @@ dfw <- rbind(dfw,ls_tbneg)
 # if no GOALS lives saved estimate, use AIM estimates shared by UNAIDS directly
 #  for KPI reporting, set behaviour constant at 2015 levels, no ART from 2017
 
-goals_deaths_averted <- read_excel(goals_deaths_averted_2015_location, 
+goals_deaths_averted <-
+  read_excel(goals_deaths_averted_2015_location, 
                                    sheet=3,col_names= TRUE, range = "A2:AZ79") %>% #check sheet = "Deaths averted" & range includes latest year 
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
-  select(iso3,"2015","2016","2017","2018","2019","2020","2021") %>% #add latest year here 
-  gather(key=year,value=value,2:ncol(.)) %>% 
+  select(iso3,"2015","2016","2017","2018","2019","2020","2021","2022") %>% #add latest year here 
+  gather(key=year,value=value,2:last_col()) %>% 
   rename(ls_goals_unadjusted=value) %>% 
   mutate(year=as.numeric(year))
 
 
 # read in JS GOALS estimate of DEATHS under the CF of no ART from 2017 
 # and behaviour constant at 2015 level  in John Stover file
-goals_deaths <-       read_excel(paste0(goals_deaths_averted_2015_location),
+goals_deaths <-       
+  read_excel(paste0(goals_deaths_averted_2015_location),
                                  sheet=7,col_names= TRUE, range = "A2:AZ79") %>% # check sheet  = 2. AIDS Deaths
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
-  select(iso3,`2015`,`2016`,`2017`,`2018`,`2019`,`2020`,`2021`) %>% #add latest year  
-  gather(key=year, value = value,2:ncol(.)) %>% 
+  select(iso3,`2015`,`2016`,`2017`,`2018`,`2019`,`2020`,`2021`,`2022`) %>% #add latest year  
+  gather(key=year, value = value,2:last_col()) %>% 
   rename(deaths_goals_js=value) %>% 
   select(iso3,year,deaths_goals_js) %>%   
   mutate(year=as.numeric(year))
@@ -409,16 +419,19 @@ goals_deaths_averted <- full_join(goals_deaths_averted,goals_deaths)
 
 
 # also read in AIM estimate of deaths from UNAIDS
-UNAIDS_data <- read_excel(UNAIDS_estimates_location,
-                          col_names= TRUE,sheet= "HIV raw 2000-2021", range= "A2:KZ3808") %>% # update sheet name and range 
+UNAIDS_data <- 
+  read_excel(UNAIDS_estimates_location,
+                          col_names= TRUE,sheet= "HIV raw 2000-2022",
+             # , range= "A2:KZ3808"
+             skip=1) %>% # update sheet name and range 
   # rename(year="...1") %>% 
   rename_with(tolower)%>% 
-  select(iso3,year,"m- aids deaths male+female") %>% 
+  select(iso3,year,"n- aids deaths male+female") %>% 
   filter(nchar(iso3)==3)# remove non country names from the iso3 column
 
 goals_deaths_averted <- left_join(goals_deaths_averted,UNAIDS_data)
 
-goals_deaths_averted <-goals_deaths_averted %>% rename(deaths_aim="m- aids deaths male+female")
+goals_deaths_averted <-goals_deaths_averted %>% rename(deaths_aim="n- aids deaths male+female")
 
 # because there are some slight differences between UNAIDS published estimates of actual deaths which appear 
 # in John Stover's file [AIM AIDS Deaths] compared to UNAIDS own published estimates redo the scaling using UNAIDS
@@ -443,12 +456,14 @@ goals_deaths_averted <- goals_deaths_averted %>%
 
 # 2. Get AIM  - deaths averted #### 
 # read in UNAIDS AIM estimates of deaths averted in file shared by  DAHER, Juliana . AIM estimates of deaths averted
-UNAIDS_data <- read_excel(AIM_deaths_averted_location,
-                          col_names= TRUE,sheet= 10, range= "A2:Z3871") %>%  #update range each year
+UNAIDS_data <- 
+  read_excel(AIM_deaths_averted_location,
+                          col_names= TRUE,sheet= 10, 
+             skip=1) %>%  #update range each year
   rename(year="...1") %>% 
   rename_with(tolower)%>%
-  select(iso3,year,`m- deaths averted by art male+female`) %>% 
-  rename(ls_aim=`m- deaths averted by art male+female`) %>% 
+  select(iso3,year,`n- deaths averted by art male+female`) %>% 
+  rename(ls_aim=`n- deaths averted by art male+female`) %>% 
   mutate(year=as.numeric(year)) %>% 
   mutate(indicator="ls_aim") %>% 
   rename(value=ls_aim) %>% 
@@ -517,25 +532,28 @@ dfw <- rbind(dfw,ls_hiv)
 # read in   second counterfactual for HIV [used for results reporting graphs and CRP graphs. not for official KPI reporting]
 # these indicators are all marked rr and only to be used for this purpose
 
-# Counterfactual_no ART const behavior since 2000.xlsx [Goals John Stover 30 July 2020]
-# Historical impact of HIV programs from AEM 2020.xlsx [ Tim Brown]
-# HIV2020Estimates_GF_16July2020.xlsx  [UNAIDS Julian Daher]
+# Counterfactual 77 countries no ART no BC after 2000 28jul23_2022 added.xlsx[John Stover/ Yu Teng ]
+# Historical impact of HIV programs from AEM 2023.xlsx [ Tim Brown]
+# HIV2023Estimates_GF_17July2023.xlsx  [UNAIDS Julian Daher]
 
 # 1. Get GOALS 2000 CF - infections averted ####
 
 # Goals infections averted 2000 CF
-goals_infections_averted <- read_excel(goals_inf_deaths_averted_2000_location,
-                                       sheet="Infections averted",col_names= TRUE,range= "C2:AC79") %>% #check latest cols included
+goals_infections_averted <- 
+  read_excel(goals_inf_deaths_averted_2000_location,
+                                       sheet="Infections averted",col_names= TRUE,
+             range= "C2:AD79",
+             ) %>% #check latest cols included
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
-  select(iso3,(c(6:ncol(.)))) %>% 
+  select(iso3,(c(6:last_col()))) %>% 
   gather(key=year,value=value,2:ncol((.))) %>% 
   mutate(year=as.numeric(year)) %>% 
-  mutate(indicatoruniqueidentifier="infections_averted_goals_CF_2000") %>% 
-  filter(!is.na(year))
+  mutate(indicatoruniqueidentifier="infections_averted_goals_CF_2000")
 
 # 2. Get GOALS 2000 CF - deaths averted ####
-goals_deaths_averted <- read_excel(goals_inf_deaths_averted_2000_location,
-                                   sheet="Deaths averted",col_names= TRUE,range= "C2:AC79") %>% #check latest cols included
+goals_deaths_averted <- 
+  read_excel(goals_inf_deaths_averted_2000_location,
+                                   sheet="Deaths averted",col_names= TRUE,range= "C2:AD79") %>% #check latest cols included
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
   select(iso3,(c(6:ncol(.)))) %>% 
   gather(key=year,value=value,2:ncol((.))) %>% 
@@ -547,7 +565,7 @@ goals_d_i_averted <- full_join(goals_deaths_averted,goals_infections_averted)
 # 3. Get AEM 2000 CF - infections averted ####
 # AEM infections averted
 AEM_infections_averted <- read_excel(AEM_inf_deaths_averted_2000_location,
-                                     col_names= TRUE,range= "B2:X15",sheet="Infections averted") %>% #check latest cols included
+                                     col_names= TRUE,range= "B2:Y15",sheet="Infections averted") %>% #check latest cols included
   # rename iso3 and other columns
   rename("iso3"="ISO 3166-1 alpha-3") %>%   
   # rename(2000:2021=(c(2:ncol((.))) 
@@ -555,32 +573,21 @@ AEM_infections_averted <- read_excel(AEM_inf_deaths_averted_2000_location,
   mutate(year=as.numeric(year)) %>% 
   mutate(indicatoruniqueidentifier="infections_averted_AEM_CF_2000")
 
-# colnames(AEM_infections_averted)[2:23] <- 2000:2021
-# make long file
-# AEM_infections_averted <- gather(AEM_infections_averted,key=year,value=value,2:ncol(AEM_infections_averted))
-
-# AEM_infections_averted$indicatoruniqueidentifier <- "infections_averted_AEM_CF_2000"
-
-# AEM_infections_averted$year <- as.numeric(AEM_infections_averted$year)
-
 # 4. Get AEM 2000 CF - deaths averted ####
-AEM_deaths_averted <- read_excel(AEM_inf_deaths_averted_2000_location,
-                                 col_names= TRUE,range= "B2:X15",sheet="Deaths averted") %>% 
+AEM_deaths_averted <- 
+  read_excel(AEM_inf_deaths_averted_2000_location,
+                                 col_names= TRUE,range= "B2:Y15",sheet="Deaths averted") %>% 
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
   gather(key=year,value=value,2:ncol((.))) %>% 
   mutate(year=as.numeric(year)) %>% 
   mutate(indicatoruniqueidentifier="deaths_averted_AEM_CF_2000")
-# make long file
-# AEM_deaths_averted <- gather(AEM_deaths_averted,key=year,value=value,2:ncol(AEM_deaths_averted))
-# AEM_deaths_averted$indicatoruniqueidentifier <- "deaths_averted_AEM_CF_2000"
-# 
-# AEM_deaths_averted$year <- as.numeric(AEM_deaths_averted$year)
 
 AEM_d_i_averted <- full_join(AEM_deaths_averted,AEM_infections_averted)
 
 # 5. also get AEM 2015 CF - deaths averted [not for KPI REPORTING]####
-AEM_deaths_averted_2015 <- read_excel(AEM_inf_deaths_averted_2015_location,
-                                      col_names= TRUE,range= "B2:H15",sheet="Deaths averted") %>% 
+AEM_deaths_averted_2015 <- 
+  read_excel(AEM_inf_deaths_averted_2015_location,
+                                      col_names= TRUE,range= "B2:J15",sheet="Deaths averted") %>% 
   rename(iso3=`ISO 3166-1 alpha-3`) %>% 
   gather(key=year,value=value,2:ncol((.))) %>% 
   mutate(year=as.numeric(year)) %>% 
@@ -630,12 +637,13 @@ d_i_averted <-
 
 # read in UNAIDS estimates of AIDS deaths, new infections and PLHIV
 
-UNAIDS_data <- read_excel(UNAIDS_estimates_location,
-                          col_names= TRUE,range= "A2:KZ3635", sheet = 2) %>% 
+UNAIDS_data <- 
+  read_excel(UNAIDS_estimates_location,
+                          col_names= TRUE,range= "A2:KZ3981", sheet = 2) %>% 
   # rename(year="...1") %>%  
   rename(country="...5") %>% 
   rename_with(tolower) %>% 
-  rename_with(~gsub("m-" , '', .x,fixed=TRUE)) %>% # update the indicator prefix letter each year 
+  rename_with(~gsub("n-" , '', .x,fixed=TRUE)) %>% # update the indicator prefix letter each year 
   rename_with(~gsub(" " , '', .x,fixed = TRUE)) %>% 
   select(year,iso3,`aidsdeathsmale+female`,`newhivinfectionsmale+female`,`hivpopulationmale+female`) %>%                                         
   gather(key=indicatoruniqueidentifier,value=value,3:ncol(.)) %>%  
@@ -954,8 +962,8 @@ dfw <-
   # calculate the country mortality rate malaria
   mutate(mal_mor_rate_100k= (Malaria7/ Malaria32)*10^5) %>% 
   # calculate HIV AGYW incidence rates (UNAIDS data) 
-  mutate(hiv_inc_rate_females_15_24= HIV22/(lag(Population9,1)- lag(HIV67,1))  *10^5) %>% # females
-  mutate(hiv_inc_rate_males_15_24=HIV19/(lag(Population10,1)- lag(HIV64,1))*10^5) %>%  # males
+  # mutate(hiv_inc_rate_females_15_24= HIV22/(lag(Population9,1)- lag(HIV67,1))  *10^5) %>% # females
+  # mutate(hiv_inc_rate_males_15_24=HIV19/(lag(Population10,1)- lag(HIV64,1))*10^5) %>%  # males
   # Calculate TB infections averted CF 2000 (not provided by WHO) but using WHO population#
   group_by(iso3) %>% 
   mutate(helper=ifelse(year==2000,tb_inc_rate_100k_who,NA)) %>% 
@@ -1085,8 +1093,8 @@ dfw <- dfw %>%
          # HIV219, not in pip
          HIV168, HIV163, # HIV222,not in pip
                # KPI8,
-         hiv_inc_rate_females_15_24,
-         hiv_inc_rate_males_15_24,
+         # hiv_inc_rate_females_15_24,
+         # hiv_inc_rate_males_15_24,
          HIV19, # new infections males 15-24
          HIV22,  # new infections females 15-24                        
          # hiv_mor_rate_males_15_24,
@@ -1097,7 +1105,7 @@ dfw <- dfw %>%
          HIV139,# annualaidsdeaths15_24male,
          HIV142,# popaged15_24male,
          Population10,# popaged15_24female,
-         Population9,# hivpop15_24male,
+         # Population9,# hivpop15_24male,
          HIV64,# hivpop15_24female,
          HIV67,HIV187,HIV183,HIV186,
          # HIV218,
