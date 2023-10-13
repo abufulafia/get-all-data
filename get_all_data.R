@@ -73,7 +73,7 @@ in_ <- "C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scrip
 
 # set the latest data for partner epi data
 
-latest_hiv_year <- 2021
+latest_hiv_year <- 2022
 latest_tb_year <- 2021
 latest_mal_year <- 2021
 
@@ -104,10 +104,11 @@ disb_year_end <- 2022
 goals_deaths_averted_2015_location <- paste0(in_,"2023_01//cf//Counterfactual 72 countries no ART since 2017 constant behavior from 2015_28jul2023_with Goals dropout sync.xlsx")
 file.exists(goals_deaths_averted_2015_location)
 
-# version from Yu Teng 10 Aug 2022
+# FIRST  version from Yu Teng 10 Aug 2023
+# CORRECTED version from Yu Ten 5 Oct 2023 to correct PMTCT data error for BFA
 # goals_inf_deaths_averted_2000 file 
 
-goals_inf_deaths_averted_2000_location <- paste0(in_,"2023_01//Counterfactual 77 countries no ART no BC after 2000 28jul23_2022 added.xlsx")
+goals_inf_deaths_averted_2000_location <- paste0(in_,"2023_01//Counterfactual 77 countries no ART no BC after 2000 28jul23_2022 added_BFA_corr.xlsx")
 file.exists(goals_inf_deaths_averted_2000_location)
 
 AIM_deaths_averted_location <- paste0(in_,"2023_01//HIV2023Estimates_GF_17July2023.xlsx")
@@ -125,7 +126,7 @@ file.exists(UNAIDS_estimates_location)
 
 
 # WHO TB department lives saved  ##
-tb_ls_location <- paste0(in_, "2022_03/lsaved_2022-09-20.csv") # lives saved estimate from WHO TB department
+tb_ls_location <- paste0(in_, "2023_01/lives_saved_2023-08-30.csv") # lives saved estimate from WHO TB department Mathieu Bastard
 file.exists(tb_ls_location)
 
 # WHO Malaria department lives saved  ##
@@ -365,7 +366,7 @@ dfw <-
 
 # C. Get TB lives saved estimates from WHO Global TB Program ####
 
-# file from P. Glaziou 20 September 2022 final lives saved numbers 
+# file from Mathieu Bastard PROVISIONAL lives saved numbers 
 
 
 ls_tbneg <-
@@ -1200,7 +1201,7 @@ write.csv(dfw,file=paste0(out,"dfw_rr_inds",Sys.Date(),".csv"),na = "", row.name
 # 4. Write load file for Country Results Profile and SSD counterfactuals ####
 # # # 
 # write.csv(dfw_all %>%
-#             filter(eligible_ever==1) %>%  
+#             filter(eligible_ever==1) %>%
 #             select(iso3,year,
 #                    infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
 #                    tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
