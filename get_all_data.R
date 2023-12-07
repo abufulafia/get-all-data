@@ -74,7 +74,7 @@ in_ <- "C://Users//rgrahn//OneDrive - The Global Fund//Documents//__SI//_R_scrip
 # set the latest data for partner epi data
 
 latest_hiv_year <- 2022
-latest_tb_year <- 2021
+latest_tb_year <- 2022
 latest_mal_year <- 2021
 
 # set start and end date of values to load from PIP (for file size management)
@@ -1191,6 +1191,7 @@ dfw <- dfw %>%
 
 # write.csv(dfw %>% filter(eligible_ever==1),file=paste0(out,"dfw_eligible",Sys.Date(),".csv"),na = "", row.names = FALSE)
 write.csv(dfw,file=paste0(out,"dfw_rr_inds",Sys.Date(),".csv"),na = "", row.names = FALSE)
+message(paste0("Your csv was written to ",paste0(out,"dfw_rr_inds",Sys.Date(),".csv")))
 
 
 # 3. write load file for allocation qualitative factors adjustment process [optional] ####
@@ -1200,13 +1201,13 @@ write.csv(dfw,file=paste0(out,"dfw_rr_inds",Sys.Date(),".csv"),na = "", row.name
 # hiv_inc_rate_100k,hiv_mor_rate_100k,tb_inc_rate_100k,tb_mor_rate_100k,mal_inc_rate_1k,mal_mor_rate_100k),file=paste0(out,"dfw_qa_",Sys.Date(),".csv"),na = "")
 # 4. Write load file for Country Results Profile and SSD counterfactuals ####
 # # # 
-# write.csv(dfw_all %>%
-#             filter(eligible_ever==1) %>%
-#             select(iso3,year,
-#                    infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
-#                    tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
-#                    mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
-#             filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
+write.csv(dfw_all %>%
+            filter(eligible_ever==1) %>%
+            select(iso3,year,
+                   infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
+                   tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
+                   mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
+            filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
 
 
 ##### for results report 2021 produce a file for interactive chart with infections / deaths averted according to results report methodology as well as actuals
