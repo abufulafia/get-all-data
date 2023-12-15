@@ -953,10 +953,12 @@ dfw <-
   # calculate the country incidence rate TB
   mutate(tb_inc_rate_100k = (TB11/ Population1)*10^5) %>% 
   # calculate the country mortality rate TB (excl. HIV+)
-  mutate(tb_mor_rate_100k = (TB58/ Population1)*10^5) %>% 
-  mutate(tb_inc_rate_100k_who = (TB11/ TB67)*10^5) %>% 
+  mutate(tb_mor_rate_100k = (TB58/ Population1)*10^5) %>%
+  
+  # since TB67 is not avalable in PIP hashing out these two lines until it is available 
+  mutate(tb_inc_rate_100k_who = (TB11/ TB67)*10^5) %>%
   # calculate the country mortality rate TB (excl. HIV+)
-  mutate(tb_mor_rate_100k_who = (TB58/ TB67)*10^5) %>% 
+  mutate(tb_mor_rate_100k_who = (TB58/ TB67)*10^5) %>%
   
   # calculate the malaria country incidence rate per country and year
   mutate(mal_inc_rate_1k=(Malaria1/ (Malaria32)*10^3)) %>% 
@@ -966,12 +968,13 @@ dfw <-
   # mutate(hiv_inc_rate_females_15_24= HIV22/(lag(Population9,1)- lag(HIV67,1))  *10^5) %>% # females
   # mutate(hiv_inc_rate_males_15_24=HIV19/(lag(Population10,1)- lag(HIV64,1))*10^5) %>%  # males
   # Calculate TB infections averted CF 2000 (not provided by WHO) but using WHO population#
-  group_by(iso3) %>% 
-  mutate(helper=ifelse(year==2000,tb_inc_rate_100k_who,NA)) %>% 
-  fill(helper, .direction="updown") %>%  
+  # since TB67 is not avalable in PIP hashing out these five lines until it is available
+  group_by(iso3) %>%
+  mutate(helper=ifelse(year==2000,tb_inc_rate_100k_who,NA)) %>%
+  fill(helper, .direction="updown") %>%
   mutate(tb_cases_averted_CF_2000_not_WHO=(TB67/10^5* helper)-TB11) %>%
-  select(-(helper)) %>% 
-  ungroup() %>% 
+  select(-(helper)) %>%
+  ungroup() %>%
   # Add specific indicators needed for RR
   # for results report 2020 add malaria populations back calculated from malaria coverage
   # Number of people that slept under an insecticide-treated net (modelled) 
@@ -1132,7 +1135,7 @@ ifelse(colnames(dfw)[18]=="year","year is OK","year is not in correct column")
 ifelse(colnames(dfw)[23]=="id","id is OK","id is not in correct column")
 
 
-#  hardcode the values used for India tb treatment success rate for the results report file ony #####
+#  hardcode the values used for India tb treatment success rate for the results report file only #####
 
 # Note: cells highlighted yellow for TB India treatment success have been adjusted based on country-published data to replace WHO TB program data which is suspected to include some private sector cases
 # the adjustment needs to be made after reviewing the data each year
@@ -1201,13 +1204,13 @@ message(paste0("Your csv was written to ",paste0(out,"dfw_rr_inds",Sys.Date(),".
 # hiv_inc_rate_100k,hiv_mor_rate_100k,tb_inc_rate_100k,tb_mor_rate_100k,mal_inc_rate_1k,mal_mor_rate_100k),file=paste0(out,"dfw_qa_",Sys.Date(),".csv"),na = "")
 # 4. Write load file for Country Results Profile and SSD counterfactuals ####
 # # # 
-write.csv(dfw_all %>%
-            filter(eligible_ever==1) %>%
-            select(iso3,year,
-                   infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
-                   tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
-                   mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
-            filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
+# write.csv(dfw_all %>%
+#             filter(eligible_ever==1) %>%
+#             select(iso3,year,
+#                    infections_averted_a_g_CF_2000_cpr,deaths_averted_a_g_aim_CF_2000_cpr,
+#                    tb_cases_averted_CF_2000_not_WHO,tb_deaths_averted_hivneg_WHO_2000,
+#                    mal_cases_averted_CF_WHO_2000,mal_deaths_averted_CF_WHO_2000) %>%
+#             filter(year>=2000&year<=latest_hiv_year),file=paste0(out,"dfw_CF for SSD",Sys.Date(),".csv"), na="",row.names = FALSE)
 
 
 ##### for results report 2021 produce a file for interactive chart with infections / deaths averted according to results report methodology as well as actuals
